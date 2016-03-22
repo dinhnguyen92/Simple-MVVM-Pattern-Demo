@@ -1,38 +1,41 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace MVVMTest.Model
 {
-    public class Person
+    public class Person : INotifyPropertyChanged
     {
-        #region NotifyPropertiesChanged
+        #region INotifyPropertyChanged
+        public event PropertyChangedEventHandler PropertyChanged;
 
-        public delegate void NamePropertiesChangedEventHandler();
-        public event NamePropertiesChangedEventHandler NamePropertiesChanged;
-
-        private void NotifyNamePropertiesChanged()
+        private void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            if (NamePropertiesChanged != null)
+            var handler = PropertyChanged;
+            if (handler != null)
             {
-                NamePropertiesChanged();
+                handler(this, new PropertyChangedEventArgs(propertyName));
             }
         }
-
         #endregion
 
-
+        // Model data
         private string _firstName;
         private string _lastName;
-        private string _fullName;
-       
+        private string _fullName;      
 
         /// <summary>
         /// Default Constructor of Person.
         /// </summary>
         public Person()
         {
+            // Subscribe the updateFullName method to the PropertyChanged event
+            // Each time FirstName and/or LastName change, the PropertyChanged event is raised
+            // And FullName is updated correspondingly
+            PropertyChanged += new PropertyChangedEventHandler(updateFullName);
         }
 
-        public void vInitialize(string firstName, string lastName)
+        public void initialize(string firstName, string lastName)
         {
             FirstName = firstName;
             LastName = lastName;
@@ -53,10 +56,7 @@ namespace MVVMTest.Model
                 {
                     Console.WriteLine("Model's FirstName changed");
                     _firstName = value;
-                    NotifyNamePropertiesChanged();
-
-                    // Update FullName
-                    FullName = _firstName + " " + _lastName;
+                    NotifyPropertyChanged();
                 }
             }
         }
@@ -76,10 +76,7 @@ namespace MVVMTest.Model
                 {
                     Console.WriteLine("Model's LastName changed");
                     _lastName = value;
-                    NotifyNamePropertiesChanged();
-
-                    // Update FullName
-                    FullName = _firstName + " " + _lastName;
+                    NotifyPropertyChanged();           
                 }
             }
         }      
@@ -93,15 +90,21 @@ namespace MVVMTest.Model
             {
                 return _fullName;
             }
-            private set
+            set
             {
                 if (_fullName != value)
                 {
                     Console.WriteLine("Model's FullName changed");
                     _fullName = value;
-                    NotifyNamePropertiesChanged();
+                    NotifyPropertyChanged();
                 }
             }
+        }
+
+        private void updateFullName(object sender, PropertyChangedEventArgs arg)
+        {
+            // Update FullName
+            FullName = _firstName + " " + _lastName;
         }
     }
 }

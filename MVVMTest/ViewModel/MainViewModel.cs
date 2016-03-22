@@ -10,7 +10,7 @@ namespace MVVMTest.ViewModel
         #region INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+        private void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
         {
             var handler = PropertyChanged;
             if (handler != null)
@@ -22,13 +22,12 @@ namespace MVVMTest.ViewModel
 
 
         // Model 
-
         private Person _customer;
 
         // Presentation data
-
         private string _firstName;
         private string _lastName;
+        private string _fullName;
         private string _welcomeMessage;
 
         // Presentation commands
@@ -40,8 +39,8 @@ namespace MVVMTest.ViewModel
         public MainViewModel()
         {
             _customer = new Person();
-            vBindData();
-            _customer.vInitialize("Hermione", "Granger");
+            bindData();
+            _customer.initialize("Hermione", "Granger");
 
             SaveCommand = new DelegateCommand(SaveExecute, SaveCanExecute);
         }
@@ -125,6 +124,28 @@ namespace MVVMTest.ViewModel
         }
 
         /// <summary>
+        /// Get/Set LastName
+        /// </summary>
+        public string FullName
+        {
+            get
+            {
+                return _fullName;
+            }
+            set
+            {
+                if (_fullName != value)
+                {
+                    Console.WriteLine("ViewModel's FullName changed");
+                    _fullName = value;
+                    _customer.FullName = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+
+        /// <summary>
         /// Get/Set WelcomeMessage
         /// </summary>
         public string WelcomeMessage
@@ -147,21 +168,26 @@ namespace MVVMTest.ViewModel
         #endregion
 
 
-        private void vUpdateWelcomeMessage(object sender, PropertyChangedEventArgs arg)
+        private void updateProperties(object sender, PropertyChangedEventArgs arg)
         {
-            WelcomeMessage = "Welcome " + Customer.FullName;
+            switch (arg.PropertyName)
+            {
+                case "FirstName":
+                    FirstName = _customer.FirstName;
+                    break;
+                case "LastName":
+                    LastName = _customer.LastName;
+                    break;
+                case "FullName":
+                    FullName = _customer.FullName;
+                    WelcomeMessage = "Welcome " + FullName;
+                    break;
+            }
         }
 
-        private void vUpdateNameProperties()
+        private void bindData()
         {
-            FirstName = _customer.FirstName;
-            LastName = _customer.LastName;
-            WelcomeMessage = "Welcome " + _customer.FullName;
-        }
-
-        private void vBindData()
-        {
-            _customer.NamePropertiesChanged += vUpdateNameProperties;
+            _customer.PropertyChanged += updateProperties;
         }
 
         private void SaveExecute(object param)
